@@ -5,15 +5,61 @@ local M = {}
 
 ---@class CodeMarks.Config
 ---@field marks_file string? The path to the marks file
+---@field pick_opts snacks.picker.Config? Options for snacks picker
 ---@type CodeMarks.Config
 M.config = {
   marks_file = vim.fn.stdpath("data") .. "/codemarks/codemarks.txt",
+  pick_opts = {
+    layout = {
+      layout = {
+        width = 0.6,
+        height = 0.6,
+        title = "{title}",
+      },
+    },
+    win = {
+      input = {
+        keys = {
+          ["<esc>"] = {
+            "switch_to_list",
+            mode = { "i" },
+            desc = "Switch to the list view",
+          },
+          ["<c-g>"] = {
+            "toggle_global",
+            mode = { "i", "n" },
+            desc = "Toggle to show all marks",
+          },
+        },
+      },
+      list = {
+        keys = {
+          ["dd"] = {
+            "delete",
+            desc = "Delete current mark",
+          },
+          ["a"] = {
+            "toggle_focus",
+            desc = "Focus input",
+          },
+          ["i"] = {
+            "toggle_focus",
+            desc = "Focus input",
+          },
+          ["r"] = {
+            "rename_mark",
+            desc = "Updates the mark description",
+          },
+        },
+      },
+    },
+  },
 }
 
 --- Setup the plugin
 ---@param opts CodeMarks.Config
 function M.setup(opts)
-  opts = vim.tbl_deep_extend("keep", opts or {}, M.config)
+  M.config = vim.tbl_deep_extend("keep", opts or {}, M.config)
   local marks_file = Path:new(opts.marks_file)
   local parent = marks_file:parent()
 
@@ -27,13 +73,14 @@ function M.setup(opts)
   end
 
   -- Load the marks file
-  M.marks = Marks:new({ marks_file = opts.marks_file })
+  M.marks = Marks:new({ marks_file = M.config.marks_file })
 end
 
 --- Find code marks
----@param opts table
+---@param opts snacks.picker.Config? Options for snacks picker
 function M.picker(opts)
-  pickers.marks.finder()
+  local pick_opts = vim.tbl_deep_extend("keep", opts or {}, M.config.pick_opts)
+  pickers.marks.finder(pick_opts)
 end
 
 --- Add a new code mark
